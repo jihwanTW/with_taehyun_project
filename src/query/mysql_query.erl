@@ -43,27 +43,27 @@ query(QueryType,[User_id]) when QueryType =:= get_salt->
       {ok,[{<<"result">>,<<"0">>},{<<"message">>,<<"user not found">>}]};
     _->
       [[Result_json]] = emysql_util:as_json(Result),
-      io:format("~p ~n",[Result_json]),
       {ok,[{<<"result">>,<<"0">>},Result_json]}
   end
 ;
 %% 로그인 체크
 %% redis로 활용불가. 최초로 접속하는부분임.
 query(QueryType, [User_id,Pwd]) when QueryType =:= user_login->
-  emysql:prepare(user_login,<<"SELECT * FROM user WHERE id = ? and pwd = ? remove='false'">>),
+  emysql:prepare(user_login,<<"SELECT * FROM user WHERE id = ? and pwd = ? and remove='false'">>),
   Result = emysql:execute(db,user_login,[User_id,Pwd]),
 
   case Result#result_packet.rows of
     []->
-      Result;
+      Result,
+      {<<"message">>,<<"failed to login">>};
     _->
-      redis_query_server:login(emysql_util:as_json(Result))
-  end,
-  [[Json_result]] = emysql_util:as_json(Result),
-  Json_result;
+      Json_result = emysql_util:as_json(Result),
+      redis_query_server:login(Json_result),
+      [Json_result1] = Json_result,
+      Json_result1
+  end;
 
 query(QueryType,[Target_idx]) when QueryType =:= user_info->
-  io:format("info : ~p ~n",[Target_idx]),
   Redis_result = redis_query_server:get_user(Target_idx),
   case Redis_result of
     {ok,undefined}->
@@ -77,16 +77,13 @@ query(QueryType,[Target_idx]) when QueryType =:= user_info->
         _->
           redis_query_server:insert(Mysql_result),
           %db 조회결과 반환
-          io:format("check in mysql ~p ~n",[Redis_result]),
           [Result|_] = Mysql_result#result_packet.rows,
           emysql_util:as_json(Result)
       end;
     {ok,_}->
-      io:format("check in redis ~p ~n",[Redis_result]),
       {ok,RedisVal}=Redis_result,
       utils:redis2json(RedisVal);
     _->
-      io:format("error this point ~p ~n",[Redis_result]),
       [{<<"result">>,<<"error in user_info . case Redis_result : _">>}]
   end;
 

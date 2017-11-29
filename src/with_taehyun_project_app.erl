@@ -55,6 +55,7 @@ start(_StartType, _StartArgs) ->
     ]),
   % ets 설정
   eredis:start_link(),
+  redis_query_server:start_link(),
   session_server:start_link(redis_session,session),
   redis_session:start_link(),
 
