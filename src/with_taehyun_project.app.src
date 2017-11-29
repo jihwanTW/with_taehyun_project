@@ -1,0 +1,19 @@
+%%%-------------------------------------------------------------------
+%%% @author Twinny-KJH
+%%% @copyright (C) 2017, <COMPANY>
+%%% @doc
+%%%
+%%% @end
+%%% Created : 29. 11월 2017 오후 4:20
+%%%-------------------------------------------------------------------
+{application, with_taehyun_project, [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+    kernel,
+    stdlib
+  ]},
+  {mod, {with_taehyun_project_app, []}},
+  {env, []}
+]}.
