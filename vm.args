@@ -1,0 +1,11 @@
+-pa ./ebin
+-pa ./deps/cowboy/ebin
+-pa ./deps/cowlib/ebin
+-pa ./deps/ranch/ebin
+-pa ./deps/emysql/ebin
+-pa ./deps/jsx/ebin
+-pa ./deps/eredis/ebin
+
+-setcookie abcd
+-eval "application:start(with_taehyun_project)"
+-sname node1
