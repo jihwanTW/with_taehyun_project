@@ -54,13 +54,13 @@ query(QueryType, [User_id,Pwd]) when QueryType =:= user_login->
 
   case Result#result_packet.rows of
     []->
-      Result,
       {<<"message">>,<<"failed to login">>};
     _->
-      Json_result = emysql_util:as_json(Result),
+      [Json_result] = emysql_util:as_json(Result),
       redis_query_server:login(Json_result),
-      [Json_result1] = Json_result,
-      Json_result1
+      % 세션 생성,저장 및 반환
+      {ok,Session_key} = session_server:insert({proplists:get_value(<<"idx">>,Json_result),User_id}),
+      {<<"session_key">>,Session_key}
   end;
 
 query(QueryType,[Target_idx]) when QueryType =:= user_info->

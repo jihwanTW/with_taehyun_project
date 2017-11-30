@@ -18,7 +18,7 @@ handle('2017_07_05', <<"user">>, <<"login">>, Data) ->
   User_id = proplists:get_value(<<"user_id">>,Data),
   Pwd = proplists:get_value(<<"pwd">>,Data),
   Query_result = mysql_query:query(user_login,[User_id,Pwd]),
-  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)};
+  {ok,jsx:encode([{<<"result">>,<<"0">>},Query_result])};
 %% 설트값 조회
 handle('2017_07_05', <<"user">>, <<"get_salt">>, Data) ->
   User_id = proplists:get_value(<<"user_id">>,Data),
@@ -52,7 +52,6 @@ handle('2017_07_05',<<"user">>,<<"check_exist">>,Data)->
     _->
       {ok,jsx:encode([{<<"result">>,<<"0">>},{<<"message">>,<<"exist">>}])}
   end
-
   ;
 
 handle(_Version,_Category,_Name,_Data)->

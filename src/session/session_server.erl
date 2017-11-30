@@ -44,6 +44,7 @@ delete(Session)->gen_server:call(?MODULE,{delete,Session}).
 
 
 init([Mod,Pool_id]) ->
+  Mod:start_link(),
   Mod_id = Mod:init_store(Pool_id),
   {ok, {Mod,Mod_id}}.
 
@@ -54,7 +55,7 @@ handle_call({lookup,Session}, _From, State) ->
   Reply = Mod:lookup(Mod_id ,Session),
   {reply,Reply, State};
 %% 세션 인서트
-handle_call({insert,{User_id,User_idx}},_From, State)->
+handle_call({insert,{User_idx,User_id}},_From, State)->
   {Mod,Mod_id} = State,
   % generate session
   Session = generate_session(User_id),

@@ -64,7 +64,7 @@ handle_call({insert,[Mysql_result]}, _From, State) ->
   Reply = {ok,'_'},
   {reply, Reply, State};
 %% 로그인할경우 redis에 저장
-handle_call({login,[Mysql_result]}, _From, State) ->
+handle_call({login,Mysql_result}, _From, State) ->
   User_idx = proplists:get_value(<<"idx">>,Mysql_result),
   Mysql_keys = proplists:get_keys(Mysql_result),
   Insert2redis = fun(Key)->
