@@ -2,3 +2,5 @@ deps
 ebin
 .rebar
 .idea
+ssl
+*.dump

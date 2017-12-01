@@ -75,6 +75,19 @@ start(_StartType, _StartArgs) ->
   %% reloader 실행
   reloader:start(),
 
+
+%%  Dispatch2 = cowboy_router:compile([
+%%    {'_', [
+%%      {"/:version/[:category/[:name]]", toppage_handler, []}
+%%    ]}
+%%  ]),
+%%  {ok, _} = cowboy:start_tls(https, [
+%%    {port, 6443},
+%%    {cacertfile,  "../ssl/cowboy-ca.crt"},
+%%    {certfile,  "../ssl/server.crt"},
+%%    {keyfile,  "../ssl/server.key"}
+%%  ], #{env => #{dispatch => Dispatch2}}),
+
   case 'with_taehyun_project_sup':start_link() of
     {ok, Pid} ->
       {ok, Pid};

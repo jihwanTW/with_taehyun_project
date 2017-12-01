@@ -54,6 +54,50 @@ handle('2017_07_05',<<"user">>,<<"check_exist">>,Data)->
   end
   ;
 
+
+%% 게시판 리스트/검색
+handle('2017_07_05',<<"board">>,<<"list">>,Data)->
+  Board = proplists:get_value(<<"board">>,Data),
+  Page = proplists:get_value(<<"page">>,Data,1),
+  Limit = proplists:get_value(<<"limit">>,Data,10),
+  Search_type = proplists:get_value(<<"search_type">>,Data,0),
+  Search_keyword = proplists:get_value(<<"search_keyword">>,Data,""),
+  Query_result = mysql_query:query(board_list,[Board,Page,Limit,Search_type,Search_keyword]),
+  {ok,jsx:encode([[{<<"result">>,<<"0">>}]]++[Query_result])}
+  ;
+%% 게시글 조회
+handle('2017_07_05',<<"board">>,<<"view">>,Data)->
+  Board = proplists:get_value(<<"board">>,Data),
+  Post_idx = proplists:get_value(<<"post_idx">>,Data),
+  Query_result = mysql_query:query(board_view,[Board, Post_idx]),
+  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)}
+  ;
+%% 게시글 쓰기
+handle('2017_07_05',<<"board">>,<<"write">>,{User_idx,Data})->
+  Board = proplists:get_value(<<"board">>,Data),
+  Title = proplists:get_value(<<"title">>,Data),
+  Contents = proplists:get_value(<<"contents">>,Data),
+  Query_result = mysql_query:query(board_write,[Board,Title,Contents,User_idx]),
+  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)}
+;
+%% 게시글 수정
+handle('2017_07_05',<<"board">>,<<"fixed">>,{User_idx,Data})->
+  Board = proplists:get_value(<<"board">>,Data),
+  Post_idx = proplists:get_value(<<"post_idx">>,Data),
+  Title = proplists:get_value(<<"title">>,Data),
+  Contents = proplists:get_value(<<"contents">>,Data),
+  Query_result = mysql_query:query(board_fixed,[Board,Post_idx,Title,Contents,User_idx]),
+  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)}
+  ;
+
+%% 게시글 삭제
+handle('2017_07_05',<<"board">>,<<"remove">>,{User_idx,Data})->
+  Board = proplists:get_value(<<"board">>,Data),
+  Post_idx = proplists:get_value(<<"post_idx">>,Data),
+  Query_result = mysql_query:query(board_remove,[Board,Post_idx,User_idx]),
+  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)}
+  ;
+
 handle(_Version,_Category,_Name,_Data)->
 %%  Version:handle(Version,Category,Name,Data)
   {not_found_error,jsx:encode([{<<"result">>,<<"0">>}])}

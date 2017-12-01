@@ -44,16 +44,34 @@ check_input({'2017_07_05',<<"user">>,<<"check_exist">>},Data)->
       {ok,undefined}
   end
 ;
+
+check_input({'2017_07_05',<<"board">>,<<"list">>},Data)->
+  check_inputData([<<"board">>],Data)
+;
+check_input({'2017_07_05',<<"board">>,<<"view">>},Data)->
+  check_inputData([<<"board">>,<<"board_idx">>],Data)
+;
+check_input({'2017_07_05',<<"board">>,<<"write">>},Data)->
+  check_inputDataAndSession([<<"board">>,<<"title">>,<<"contents">>],Data)
+;
+check_input({'2017_07_05',<<"board">>,<<"fixed">>},Data)->
+  check_inputDataAndSession([<<"board">>,<<"post_idx">>,<<"title">>,<<"contents">>],Data)
+;
+check_input({'2017_07_05',<<"board">>,<<"remove">>},Data)->
+  check_inputDataAndSession([<<"board">>,<<"post_idx">>],Data)
+;
 %% 유저 정보 보기 체크
 check_input({<<"user">>,<<"info">>,_},Data)->
   check_inputDataAndSession([<<"target_idx">>],Data);
 %% 유저 정보변경 데이터 존재여부 체크
 check_input({<<"user">>,<<"update">>,_},Data)->
-  check_inputDataAndSession([<<"email">>,<<"nickname">>,<<"session">>],Data);
+  check_inputDataAndSession([<<"email">>,<<"nickname">>],Data);
 %% 유저 로그아웃 데이터 존재여부 체크
 check_input({<<"user">>,<<"logout">>,_},Data)->
-  check_inputDataAndSession([<<"session">>],Data)
-
+  check_inputDataAndSession([],Data)
+;
+check_input({_Version,_Category,_Name},_Data)->
+  {error,jsx:encode({<<"result">>,<<"1">>},{<<",message">>,<<"undefiend checkinput!">>})}
 .
 
 
@@ -65,7 +83,7 @@ check_inputDataAndSession(NeedList,Data)->
   case Result of
     []->
       % session key check
-      Session = proplists:get_value(<<"session">>,Data),
+      Session = proplists:get_value(<<"session_key">>,Data),
       case Lookup_result = session_server:lookup(Session) of
         {ok,undefined}->
           {error,jsx:encode([{<<"result">>,<<"not exsist session">>}])};
