@@ -49,7 +49,7 @@ check_input({'2017_07_05',<<"board">>,<<"list">>},Data)->
   check_inputData([<<"board">>],Data)
 ;
 check_input({'2017_07_05',<<"board">>,<<"view">>},Data)->
-  check_inputData([<<"board">>,<<"board_idx">>],Data)
+  check_inputData([<<"board">>,<<"post_idx">>],Data)
 ;
 check_input({'2017_07_05',<<"board">>,<<"write">>},Data)->
   check_inputDataAndSession([<<"board">>,<<"title">>,<<"contents">>],Data)
@@ -60,18 +60,8 @@ check_input({'2017_07_05',<<"board">>,<<"fixed">>},Data)->
 check_input({'2017_07_05',<<"board">>,<<"remove">>},Data)->
   check_inputDataAndSession([<<"board">>,<<"post_idx">>],Data)
 ;
-%% 유저 정보 보기 체크
-check_input({<<"user">>,<<"info">>,_},Data)->
-  check_inputDataAndSession([<<"target_idx">>],Data);
-%% 유저 정보변경 데이터 존재여부 체크
-check_input({<<"user">>,<<"update">>,_},Data)->
-  check_inputDataAndSession([<<"email">>,<<"nickname">>],Data);
-%% 유저 로그아웃 데이터 존재여부 체크
-check_input({<<"user">>,<<"logout">>,_},Data)->
-  check_inputDataAndSession([],Data)
-;
 check_input({_Version,_Category,_Name},_Data)->
-  {error,jsx:encode({<<"result">>,<<"1">>},{<<",message">>,<<"undefiend checkinput!">>})}
+  {error_url_not_found,[{<<"message">>,<<"undefiend url">>}]}
 .
 
 
@@ -86,12 +76,12 @@ check_inputDataAndSession(NeedList,Data)->
       Session = proplists:get_value(<<"session_key">>,Data),
       case Lookup_result = session_server:lookup(Session) of
         {ok,undefined}->
-          {error,jsx:encode([{<<"result">>,<<"not exsist session">>}])};
+          {error_session_not_exist,[{<<"message">>,<<"not exsist session">>}]};
         _->
           Lookup_result
       end;
     _->
-      {error,jsx:encode([{<<"result">>,<<"Not enough data">>}])}
+      {error_not_enough_parameter,[{<<"message">>,<<"not enough data">>}]}
   end.
 
 
@@ -104,5 +94,5 @@ check_inputData(NeedList,Data)->
     []->
       {ok,undefined};
     _->
-      {error,jsx:encode([{<<"result">>,<<"Not enough data">>}])}
+      {error_not_enough_parameter,[{<<"message">>,<<"not enough data">>}]}
   end.

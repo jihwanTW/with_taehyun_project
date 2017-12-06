@@ -17,13 +17,11 @@
 handle('2017_07_05', <<"user">>, <<"login">>, Data) ->
   User_id = proplists:get_value(<<"user_id">>,Data),
   Pwd = proplists:get_value(<<"pwd">>,Data),
-  Query_result = mysql_query:query(user_login,[User_id,Pwd]),
-  {ok,jsx:encode([{<<"result">>,<<"0">>},Query_result])};
+  mysql_query:query(user_login,[User_id,Pwd]);
 %% 설트값 조회
 handle('2017_07_05', <<"user">>, <<"get_salt">>, Data) ->
   User_id = proplists:get_value(<<"user_id">>,Data),
-  {Result_atom,Result_json}= mysql_query:query(get_salt,[User_id]),
-  {Result_atom,jsx:encode(Result_json)};
+  mysql_query:query(get_salt,[User_id]);
 %% 유저 가입
 handle('2017_07_05', <<"user">>, <<"register">>, Data) ->
   User_id = proplists:get_value(<<"user_id">>,Data),
@@ -36,9 +34,9 @@ handle('2017_07_05', <<"user">>, <<"register">>, Data) ->
   Result = mysql_query:query(check_exist,[User_id,Email, User_nick]),
   case Result#result_packet.rows of
     []->
-      {ok,jsx:encode([{<<"result">>,<<"0">>},mysql_query:query(user_register,[User_id,Pwd,Name,Email, User_nick,Salt])])};
+      mysql_query:query(user_register,[User_id,Pwd,Name,Email, User_nick,Salt]);
     _->
-      {ok,jsx:encode([{<<"result">>,<<"0">>},{<<"message">>,<<"exist">>}])}
+      {error_user_exist,[{<<"message">>,<<"user exsit">>}]}
   end;
 %% 유저 아이디,닉네임,이메일 중복여부 조회
 handle('2017_07_05',<<"user">>,<<"check_exist">>,Data)->
@@ -48,9 +46,9 @@ handle('2017_07_05',<<"user">>,<<"check_exist">>,Data)->
   Result = mysql_query:query(check_exist,[User_id,Email, User_nick]),
   case Result#result_packet.rows of
     []->
-      {ok,jsx:encode([{<<"result">>,<<"0">>},{<<"message">>,<<"not exist">>}])};
+      {ok,[{<<"message">>,<<"not exist">>}]};
     _->
-      {ok,jsx:encode([{<<"result">>,<<"0">>},{<<"message">>,<<"exist">>}])}
+      {error_check_exist,[{<<"message">>,<<"check exsit">>}]}
   end
   ;
 
@@ -62,23 +60,20 @@ handle('2017_07_05',<<"board">>,<<"list">>,Data)->
   Limit = proplists:get_value(<<"limit">>,Data,10),
   Search_type = proplists:get_value(<<"search_type">>,Data,0),
   Search_keyword = proplists:get_value(<<"search_keyword">>,Data,""),
-  Query_result = mysql_query:query(board_list,[Board,Page,Limit,Search_type,Search_keyword]),
-  {ok,jsx:encode([[{<<"result">>,<<"0">>}]]++[Query_result])}
+  mysql_query:query(board_list,[Board,Page,Limit,Search_type,Search_keyword])
   ;
 %% 게시글 조회
 handle('2017_07_05',<<"board">>,<<"view">>,Data)->
   Board = proplists:get_value(<<"board">>,Data),
   Post_idx = proplists:get_value(<<"post_idx">>,Data),
-  Query_result = mysql_query:query(board_view,[Board, Post_idx]),
-  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)}
+  mysql_query:query(board_view,[Board, Post_idx])
   ;
 %% 게시글 쓰기
 handle('2017_07_05',<<"board">>,<<"write">>,{User_idx,Data})->
   Board = proplists:get_value(<<"board">>,Data),
   Title = proplists:get_value(<<"title">>,Data),
   Contents = proplists:get_value(<<"contents">>,Data),
-  Query_result = mysql_query:query(board_write,[Board,Title,Contents,User_idx]),
-  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)}
+  mysql_query:query(board_write,[Board,Title,Contents,User_idx])
 ;
 %% 게시글 수정
 handle('2017_07_05',<<"board">>,<<"fixed">>,{User_idx,Data})->
@@ -86,19 +81,17 @@ handle('2017_07_05',<<"board">>,<<"fixed">>,{User_idx,Data})->
   Post_idx = proplists:get_value(<<"post_idx">>,Data),
   Title = proplists:get_value(<<"title">>,Data),
   Contents = proplists:get_value(<<"contents">>,Data),
-  Query_result = mysql_query:query(board_fixed,[Board,Post_idx,Title,Contents,User_idx]),
-  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)}
+  mysql_query:query(board_fixed,[Board,Post_idx,Title,Contents,User_idx])
   ;
 
 %% 게시글 삭제
 handle('2017_07_05',<<"board">>,<<"remove">>,{User_idx,Data})->
   Board = proplists:get_value(<<"board">>,Data),
   Post_idx = proplists:get_value(<<"post_idx">>,Data),
-  Query_result = mysql_query:query(board_remove,[Board,Post_idx,User_idx]),
-  {ok,jsx:encode([{<<"result">>,<<"0">>}]++Query_result)}
+  mysql_query:query(board_remove,[Board,Post_idx,User_idx])
   ;
 
 handle(_Version,_Category,_Name,_Data)->
 %%  Version:handle(Version,Category,Name,Data)
-  {not_found_error,jsx:encode([{<<"result">>,<<"0">>}])}
+  {error_url_not_found,[{<<"message">>,<<"not found api">>}]}
 .

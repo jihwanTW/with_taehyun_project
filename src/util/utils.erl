@@ -10,7 +10,7 @@
 -author("Twinny-KJH").
 
 %% API
--export([generate_random_int/0,generate_random_string/0,redis2json/1]).
+-export([generate_random_int/0, generate_random_string/0, redis2json/1, list2json/1, query_execute/4, result_as_json/1]).
 
 
 
@@ -38,3 +38,16 @@ redis2json([Key,Value|T],Result)->
   Result2 = Result++[{Key,Value}],
   redis2json(T,Result2)
 .
+
+list2json(Binary)->
+  jsx:encode(Binary)
+.
+
+query_execute(Db,Pool,Sql,Param)->
+  emysql:prepare(Pool,Sql),
+  emysql:execute(Db,Pool,Param)
+.
+
+result_as_json(Query_result)->
+  emysql_util:as_json(Query_result)
+  .

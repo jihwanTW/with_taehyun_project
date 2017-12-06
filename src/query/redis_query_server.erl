@@ -53,7 +53,7 @@ handle_call({get_user,User_idx}, _From, State) ->
   end,
   {reply, Reply, State};
 %% redis에 저장되지 않은 유저를 조회할경우 저장
-handle_call({insert,[Mysql_result]}, _From, State) ->
+handle_call({insert,Mysql_result}, _From, State) ->
   User_idx = proplists:get_value(<<"idx">>,Mysql_result),
   Mysql_keys = proplists:get_keys(Mysql_result),
   Insert2redis = fun(Key)->
