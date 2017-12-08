@@ -22,6 +22,13 @@ handle('2017_07_05', <<"user">>, <<"login">>, Data) ->
 handle('2017_07_05', <<"user">>, <<"get_salt">>, Data) ->
   User_id = proplists:get_value(<<"user_id">>,Data),
   mysql_query:query(get_salt,[User_id]);
+%% 유저정보 조회
+handle('2017_07_05', <<"user">>, <<"target_info">>, Data) ->
+  Target_idx = proplists:get_value(<<"target_idx">>,Data),
+  mysql_query:query(user_info,[Target_idx]);
+%% 본인 정보 조회
+handle('2017_07_05', <<"user">>, <<"info">>, {User_idx,_Data}) ->
+  mysql_query:query(user_info,[User_idx]);
 %% 유저 가입
 handle('2017_07_05', <<"user">>, <<"register">>, Data) ->
   User_id = proplists:get_value(<<"user_id">>,Data),
@@ -49,6 +56,19 @@ handle('2017_07_05',<<"user">>,<<"check_exist">>,Data)->
       {ok,[{<<"message">>,<<"not exist">>}]};
     _->
       {error_check_exist,[{<<"message">>,<<"check exsit">>}]}
+  end
+  ;
+%% 유저정보 수정
+handle('2017_07_05',<<"user">>,<<"fixed_data">>,{User_idx,Data})->
+  % nick or profile_image_address
+  User_nick = proplists:get_value(<<"user_nick">>,Data),
+  Profile_image_address = proplists:get_value(<<"profile_image_address">>,Data),
+  Result = mysql_query:query(check_exist,["", "",User_nick]),
+  case Result#result_packet.rows of
+    []->
+      mysql_query:query(fixed_data,[User_idx, User_nick,Profile_image_address]);
+    _->
+      {error_check_exist,[{<<"message">>,<<"user_nick is exsit">>}]}
   end
   ;
 
@@ -89,6 +109,31 @@ handle('2017_07_05',<<"board">>,<<"remove">>,{User_idx,Data})->
   Board = proplists:get_value(<<"board">>,Data),
   Post_idx = proplists:get_value(<<"post_idx">>,Data),
   mysql_query:query(board_remove,[Board,Post_idx,User_idx])
+  ;
+handle('2017_07_05',<<"php_jquery">>,<<"test">>,Data)->
+  Id = proplists:get_value(<<"unique_id">>,Data),
+  Result = case Id of
+             <<"0">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,65}]
+             ;
+             <<"1">>->[{<<"search">>,<<"no">>},{<<"percentage">>,12}]
+             ;
+             <<"2">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,80}]
+             ;
+             <<"3">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,70}]
+             ;
+             <<"4">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,50}]
+             ;
+             <<"5">>->[{<<"search">>,<<"no">>},{<<"percentage">>,10}]
+             ;
+             <<"6">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,60}]
+             ;
+             <<"7">>->[{<<"search">>,<<"no">>},{<<"percentage">>,15}]
+             ;
+             <<"8">>->[{<<"search">>,<<"no">>},{<<"percentage">>,20}]
+             ;
+             <<"9">>->[{<<"search">>,<<"no">>},{<<"percentage">>,18}]
+  end,
+  {ok,Result}
   ;
 
 handle(_Version,_Category,_Name,_Data)->

@@ -25,6 +25,12 @@ check_input({'2017_07_05',<<"user">>,<<"login">>},Data)->
 %% 유저 살트값 조회 데이터 존재여부 체크
 check_input({'2017_07_05',<<"user">>,<<"get_salt">>},Data)->
   check_inputData([<<"user_id">>],Data);
+%% 유저 정보 조회
+check_input({'2017_07_05',<<"user">>,<<"info">>},Data)->
+  check_inputDataAndSession([],Data);
+%% 유저 정보 조회
+check_input({'2017_07_05',<<"user">>,<<"target_info">>},Data)->
+  check_inputData([<<"target_idx">>],Data);
 %% 유저 중복 조회 데이터 존재여부 체크
 check_input({'2017_07_05',<<"user">>,<<"check_exist">>},Data)->
   case check_inputData([<<"user_id">>],Data) of
@@ -44,6 +50,9 @@ check_input({'2017_07_05',<<"user">>,<<"check_exist">>},Data)->
       {ok,undefined}
   end
 ;
+%% 유저 정보 조회
+check_input({'2017_07_05',<<"user">>,<<"fixed_data">>},Data)->
+  check_inputDataAndSession([<<"user_nick">>,<<"profile_image_address">>],Data);
 
 check_input({'2017_07_05',<<"board">>,<<"list">>},Data)->
   check_inputData([<<"board">>],Data)
@@ -59,6 +68,12 @@ check_input({'2017_07_05',<<"board">>,<<"fixed">>},Data)->
 ;
 check_input({'2017_07_05',<<"board">>,<<"remove">>},Data)->
   check_inputDataAndSession([<<"board">>,<<"post_idx">>],Data)
+;
+
+
+
+check_input({'2017_07_05',<<"php_jquery">>,<<"test">>},Data)->
+  check_inputData([],Data)
 ;
 check_input({_Version,_Category,_Name},_Data)->
   {error_url_not_found,[{<<"message">>,<<"undefiend url">>}]}

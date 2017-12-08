@@ -12,7 +12,7 @@
 -behaviour(gen_server).
 
 %% API
--export([get_user/1,insert/1,login/1,update/1,delete/1]).
+-export([get_user/1,insert/1,login/1,update_user_data/1,delete/1]).
 
 -export([start_link/0]).
 
@@ -39,7 +39,7 @@ get_user(User_idx)->gen_server:call(?MODULE,{get_user,User_idx}).
 delete(User_idx)->gen_server:call(?MODULE,{delete,User_idx}).
 insert(Mysql_result)->gen_server:call(?MODULE,{insert,Mysql_result}).
 login(Mysql_result)->gen_server:call(?MODULE,{login,Mysql_result}).
-update({User_idx,Email,Nickname})->gen_server:call(?MODULE,{update,{User_idx,Email,Nickname}}).
+update_user_data({User_idx,Email,Nickname})->gen_server:call(?MODULE,{update_user_data,{User_idx,Email,Nickname}}).
 
 
 %% 유저조회
@@ -76,10 +76,10 @@ handle_call({login,Mysql_result}, _From, State) ->
 handle_call({delete,User_idx}, _From, State) ->
   eredis:q(State,["HDEL",User_idx]),
   {reply, ignored, State};
-handle_call({update,{User_idx,Email,Nickname}}, _From, State) ->
-  eredis:q(State,["HDEL",User_idx,email,nickname]),
-  eredis:q(State,["HSET",User_idx,email,Email]),
-  eredis:q(State,["HSET",User_idx,nickname,Nickname]),
+handle_call({update_user_data,{User_idx,User_nick,Profile_image_address}}, _From, State) ->
+  eredis:q(State,["HDEL",User_idx,nickname,profile_image_address]),
+  eredis:q(State,["HSET",User_idx,nickname,User_nick]),
+  eredis:q(State,["HSET",User_idx,profile_image_address,Profile_image_address]),
   {reply, ignored, State}
 .
 

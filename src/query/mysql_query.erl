@@ -49,6 +49,7 @@ query(QueryType,[User_id]) when QueryType =:= get_salt->
 %% 로그인 체크
 %% redis로 활용불가. 최초로 접속하는부분임.
 query(QueryType, [User_id,Pwd]) when QueryType =:= user_login->
+
   Sql = "SELECT * FROM user WHERE id = ? and pwd = ? and remove='false'",
   Result = utils:query_execute(db,user_login,Sql,[User_id,Pwd]),
 
@@ -56,11 +57,15 @@ query(QueryType, [User_id,Pwd]) when QueryType =:= user_login->
     []->
       {error_failed_login,[{<<"message">>,<<"failed to login">>}]};
     _->
+      [Result1] = utils:result_as_json(Result),
+      Sql1 = "UPDATE user SET last_login_datetime=now()  WHERE idx = ?",
+      utils:query_execute(db,user_login_update,Sql1,[proplists:get_value(<<"idx">>,Result1)]),
+
       [Json_result] = utils:result_as_json(Result),
       % 세션 생성,저장 및 반환
       redis_query_server:insert(Json_result),
       {ok,Session_key} = session_server:insert({proplists:get_value(<<"idx">>,Json_result),User_id}),
-      {ok,[{<<"session_key">>,Session_key}]}
+      {ok,[{<<"session_key">>,Session_key},{<<"user_nick">>,proplists:get_value(<<"nickname">>,Json_result)}]}
   end;
 
 query(QueryType,[Target_idx]) when QueryType =:= user_info->
@@ -75,14 +80,15 @@ query(QueryType,[Target_idx]) when QueryType =:= user_info->
         []->
           {error_user_not_exist,[{<<"message">>,<<"undefined value">>}]};
         _->
-          redis_query_server:insert(Mysql_result),
+          Result = utils:result_as_json(Mysql_result),
+          [Result1] = Result,
+          redis_query_server:insert(Result1),
           %db 조회결과 반환
-          [Result|_] = Mysql_result#result_packet.rows,
-          utils:result_as_json(Result)
+          {ok,[{<<"info">>,Result}]}
       end;
     {ok,_}->
       {ok,RedisVal}=Redis_result,
-      {ok,[utils:redis2json(RedisVal)]};
+      {ok,[{<<"info">>,utils:redis2json(RedisVal)}]};
     _->
       {error_redis,[{<<"message">>,<<"error in user_info . case Redis_result : _">>}]}
   end;
@@ -112,31 +118,31 @@ query(QueryType,[Board,Page,Limit,Search_type,Search_keyword]) when QueryType =:
     error->
       {error_board_not_exist,[{<<"message">>,<<"board not exist">>}]};
     _->
-      Sql = "SELECT board.idx,board.title,board.user_nick,board.datetime,board.view_count,t.cnt FROM " ++ Board1 ++ ",(select count(*) as cnt from "++Board1++" ) as t",
+      Sql = "SELECT board.idx,board.title,board.user_nick,board.datetime,board.view_count,t.cnt FROM " ++ Board1 ++ ",(select count(*) as cnt from "++Board1++" WHERE remove = 'false') as t",
       Result= case Search_type of
                  1->
                    % 아이디로 검색
                    Sql1 =Sql++" WHERE user_id = ? and remove='false' limit ?,?",
-                   utils:query_execute(db,board_list,Sql1,[Board,Board,Search_keyword,((Page-1)*Limit),Limit]);
+                   utils:query_execute(db,board_list,Sql1,[Search_keyword,((Page-1)*Limit),Limit]);
                  2->
                    % 닉네임으로 검색
                    Sql1 =Sql++" WHERE user_nick = ? and remove='false' limit ?,?",
-                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword,((Page-1)*Limit),Limit]);
+                   utils:query_execute(db,board_list,Sql1,[Search_keyword,((Page-1)*Limit),Limit]);
                  3->
                    % 게시판 제목 검색
                    Sql1 =Sql++" WHERE title like ? and remove='false' limit ?,?",
-                   Search_keyword1 = "%"++Search_keyword++"%",
-                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword1,((Page-1)*Limit),Limit]);
+                   Search_keyword1 = "%"++binary_to_list(Search_keyword)++"%",
+                   utils:query_execute(db,board_list,Sql1,[Search_keyword1,((Page-1)*Limit),Limit]);
                  4->
                    % 게시판 내용 검색
                    Sql1 =Sql++" WHERE contents like ? and remove='false' limit ?,?",
-                   Search_keyword1 = "%"++Search_keyword++"%",
-                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword1,((Page-1)*Limit),Limit]);
+                   Search_keyword1 = "%"++binary_to_list(Search_keyword)++"%",
+                   utils:query_execute(db,board_list,Sql1,[Search_keyword1,((Page-1)*Limit),Limit]);
                  5->
                    % 게시판 제목+내용 검색
                    Sql1 =Sql++" WHERE (title like ? or contents like ?) and remove='false' limit ?,?",
-                   Search_keyword1 = "%"++Search_keyword++"%",
-                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword1,Search_keyword1,((Page-1)*Limit),Limit]);
+                   Search_keyword1 = "%"++binary_to_list(Search_keyword)++"%",
+                   utils:query_execute(db,board_list,Sql1,[Search_keyword1,Search_keyword1,((Page-1)*Limit),Limit]);
                  _->
                    %SELECT board.*,t.cnt FROM board, (select count(*) as cnt from board ) as t WHERE remove='false' limit 0,2
                    Sql1 =Sql++" WHERE remove='false' limit ?,?",
@@ -206,6 +212,19 @@ query(QueryType,[Board,Post_idx,User_idx]) when QueryType =:= board_remove->
       {ok,[{<<"row">>,Result_num_row}]}
   end
 ;
+query(QueryType,[User_idx, User_nick,Profile_image_address]) when QueryType =:= fixed_data->
+  Sql = "UPDATE user SET nickname = ? , profile_image_address=? WHERE idx = ?",
+  Result = utils:query_execute(db,fixed_data,Sql,[User_nick,Profile_image_address,User_idx]),
+  Result_num_row = Result#ok_packet.affected_rows,
+  case Result_num_row of
+    0->
+      {error_user_not_exist,[{<<"message">>,<<"error_user_not_exist or not chagned nickname any user">>}]};
+    _->
+      % redis server에서도 바꿔야함.
+      redis_query_server:update_user_data(User_idx,User_nick,Profile_image_address),
+      {ok,[{<<"row">>,Result_num_row}]}
+  end
+;
 query(QueryType,_)->
   {error_query,([{<<"message">>,<<"query type error">>},{<<"type">>,QueryType}])}
 .
@@ -224,3 +243,5 @@ get_board(Board)->
 
 
 %% query_execute(db,board_remove,Sql,),
+
+%%fixed_user,[User_idx, User_nick,Profile_image_address]

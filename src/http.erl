@@ -28,7 +28,7 @@ handle(Req,State)->
   Version_atom = binary_to_atom(Version,utf8),
   % 인풋데이터 존재여부와 세션키를 필요로하면 세션값체크
   CheckResult = check_input_data:check_input({Version_atom, Category, Name},DecodeData),
-  io:format("~p ~p ~p ~p ~n",[Version,Category,Name,DecodeData]),
+  io:format("[~p]~n ~p ~p ~p ~p ~n",[erlang:localtime(),Version,Category,Name,DecodeData]),
   % api 호출
   FunctionResult = case CheckResult of
                      {ok,undefined}->
@@ -88,27 +88,27 @@ append_http_code(Result)->
 append_result_json({Result, Json_list})->
   Json = case Result of
            ok->
-             utils:list2json([{<<"result">>,<<"0">>}]++ Json_list);
+             utils:list2json([{<<"result">>,0}]++ Json_list);
            error_url_not_found->
-             utils:list2json([{<<"result">>,<<"1">>}]++ Json_list);
+             utils:list2json([{<<"result">>,1}]++ Json_list);
            error_not_enough_parameter->
-             utils:list2json([{<<"result">>,<<"2">>}]++ Json_list);
+             utils:list2json([{<<"result">>,2}]++ Json_list);
            error_session_not_exist->
-             utils:list2json([{<<"result">>,<<"3">>}]++ Json_list);
+             utils:list2json([{<<"result">>,3}]++ Json_list);
            error_failed_login->
-             utils:list2json([{<<"result">>,<<"4">>}]++ Json_list);
+             utils:list2json([{<<"result">>,4}]++ Json_list);
            error_user_not_exist->
-             utils:list2json([{<<"result">>,<<"5">>}]++ Json_list);
+             utils:list2json([{<<"result">>,5}]++ Json_list);
            error_user_exist->
-             utils:list2json([{<<"result">>,<<"6">>}]++ Json_list);
+             utils:list2json([{<<"result">>,6}]++ Json_list);
            error_check_exist->
-             utils:list2json([{<<"result">>,<<"7">>}]++ Json_list);
+             utils:list2json([{<<"result">>,7}]++ Json_list);
            error_board_not_exist->
-             utils:list2json([{<<"result">>,<<"8">>}]++ Json_list);
+             utils:list2json([{<<"result">>,8}]++ Json_list);
            error_post_not_exist->
-             utils:list2json([{<<"result">>,<<"9">>}]++ Json_list);
+             utils:list2json([{<<"result">>,9}]++ Json_list);
            _->
-             utils:list2json([{<<"result">>,<<"-1">>},{<<"error_result">>,Result},{<<"list">>,Json_list}])
+             utils:list2json([{<<"result">>,-1},{<<"error_result">>,Result},{<<"list">>,Json_list}])
   end,
   {Result,Json}
   .
