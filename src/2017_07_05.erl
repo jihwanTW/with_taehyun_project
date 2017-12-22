@@ -100,6 +100,11 @@ handle('2017_07_05',<<"board">>,<<"fixed">>,{User_idx,Data})->
   Board = proplists:get_value(<<"board">>,Data),
   Post_idx = proplists:get_value(<<"post_idx">>,Data),
   Title = proplists:get_value(<<"title">>,Data),
+
+
+
+
+
   Contents = proplists:get_value(<<"contents">>,Data),
   mysql_query:query(board_fixed,[Board,Post_idx,Title,Contents,User_idx])
   ;
@@ -113,25 +118,25 @@ handle('2017_07_05',<<"board">>,<<"remove">>,{User_idx,Data})->
 handle('2017_07_05',<<"php_jquery">>,<<"test">>,Data)->
   Id = proplists:get_value(<<"unique_id">>,Data),
   Result = case Id of
-             <<"0">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,65}]
+             <<"0">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,90}]
              ;
-             <<"1">>->[{<<"search">>,<<"no">>},{<<"percentage">>,12}]
+             <<"1">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,80}]
              ;
-             <<"2">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,80}]
+             <<"2">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,70}]
              ;
-             <<"3">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,70}]
+             <<"3">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,60}]
              ;
-             <<"4">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,50}]
+             <<"4">>->[{<<"search">>,<<"no">>},{<<"percentage">>,50}]
              ;
-             <<"5">>->[{<<"search">>,<<"no">>},{<<"percentage">>,10}]
+             <<"5">>->[{<<"search">>,<<"no">>},{<<"percentage">>,40}]
              ;
-             <<"6">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,60}]
+             <<"6">>->[{<<"search">>,<<"yes">>},{<<"percentage">>,30}]
              ;
-             <<"7">>->[{<<"search">>,<<"no">>},{<<"percentage">>,15}]
+             <<"7">>->[{<<"search">>,<<"no">>},{<<"percentage">>,20}]
              ;
-             <<"8">>->[{<<"search">>,<<"no">>},{<<"percentage">>,20}]
+             <<"8">>->[{<<"search">>,<<"no">>},{<<"percentage">>,10}]
              ;
-             <<"9">>->[{<<"search">>,<<"no">>},{<<"percentage">>,18}]
+             <<"9">>->[{<<"search">>,<<"no">>},{<<"percentage">>,5}]
   end,
   {ok,Result}
   ;

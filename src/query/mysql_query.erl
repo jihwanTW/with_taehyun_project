@@ -118,35 +118,36 @@ query(QueryType,[Board,Page,Limit,Search_type,Search_keyword]) when QueryType =:
     error->
       {error_board_not_exist,[{<<"message">>,<<"board not exist">>}]};
     _->
-      Sql = "SELECT board.idx,board.title,board.user_nick,board.datetime,board.view_count,t.cnt FROM " ++ Board1 ++ ",(select count(*) as cnt from "++Board1++" WHERE remove = 'false') as t",
+      Sql = "SELECT board.idx,board.title,board.user_nick,board.datetime,board.view_count,board.board_name,t.cnt FROM board,(select count(*) as cnt from board WHERE board_name= ? and ",
+      Cnt_sql = "remove = 'false') as t",
       Result= case Search_type of
                  1->
                    % 아이디로 검색
-                   Sql1 =Sql++" WHERE user_id = ? and remove='false' limit ?,?",
-                   utils:query_execute(db,board_list,Sql1,[Search_keyword,((Page-1)*Limit),Limit]);
+                   Sql1 =Sql++" user_id= ? and "++Cnt_sql++" WHERE board_name = ? and user_id = ? and remove='false' order by idx desc limit ?,?",
+                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword,Board,Search_keyword,((Page-1)*Limit),Limit]);
                  2->
                    % 닉네임으로 검색
-                   Sql1 =Sql++" WHERE user_nick = ? and remove='false' limit ?,?",
-                   utils:query_execute(db,board_list,Sql1,[Search_keyword,((Page-1)*Limit),Limit]);
+                   Sql1 =Sql++" user_nick= ? and "++Cnt_sql++" WHERE board_name = ? and user_nick = ? and remove='false' order by idx desc limit ?,?",
+                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword,Board,Search_keyword,((Page-1)*Limit),Limit]);
                  3->
                    % 게시판 제목 검색
-                   Sql1 =Sql++" WHERE title like ? and remove='false' limit ?,?",
+                   Sql1 =Sql++" title like ? and "++Cnt_sql++" WHERE board_name = ? and title like ? and remove='false' order by idx desc limit ?,?",
                    Search_keyword1 = "%"++binary_to_list(Search_keyword)++"%",
-                   utils:query_execute(db,board_list,Sql1,[Search_keyword1,((Page-1)*Limit),Limit]);
+                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword1,Board,Search_keyword1,((Page-1)*Limit),Limit]);
                  4->
                    % 게시판 내용 검색
-                   Sql1 =Sql++" WHERE contents like ? and remove='false' limit ?,?",
+                   Sql1 =Sql++" contents like ? and "++Cnt_sql++" WHERE board_name = ? and contents like ? and remove='false' order by idx desc limit ?,?",
                    Search_keyword1 = "%"++binary_to_list(Search_keyword)++"%",
-                   utils:query_execute(db,board_list,Sql1,[Search_keyword1,((Page-1)*Limit),Limit]);
+                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword1,Board,Search_keyword1,((Page-1)*Limit),Limit]);
                  5->
                    % 게시판 제목+내용 검색
-                   Sql1 =Sql++" WHERE (title like ? or contents like ?) and remove='false' limit ?,?",
+                   Sql1 =Sql++" (title like ? or contents like ?) and "++Cnt_sql++" WHERE board_name = ? and (title like ? or contents like ?) and remove='false' order by idx desc limit ?,?",
                    Search_keyword1 = "%"++binary_to_list(Search_keyword)++"%",
-                   utils:query_execute(db,board_list,Sql1,[Search_keyword1,Search_keyword1,((Page-1)*Limit),Limit]);
+                   utils:query_execute(db,board_list,Sql1,[Board,Search_keyword1,Search_keyword1,Board,Search_keyword1,Search_keyword1,((Page-1)*Limit),Limit]);
                  _->
                    %SELECT board.*,t.cnt FROM board, (select count(*) as cnt from board ) as t WHERE remove='false' limit 0,2
-                   Sql1 =Sql++" WHERE remove='false' limit ?,?",
-                   utils:query_execute(db,board_list,Sql1,[((Page-1)*Limit),Limit])
+                   Sql1 =Sql++Cnt_sql++" WHERE board_name=? and remove='false' order by idx desc limit ?,?",
+                   utils:query_execute(db,board_list,Sql1,[Board,Board,((Page-1)*Limit),Limit])
 
                end,
       {ok,[{<<"boards">>,utils:result_as_json(Result)}]}
@@ -158,15 +159,15 @@ query(QueryType,[Board, Post_idx]) when QueryType =:= board_view->
     error->
       {error_board_not_exist,[{<<"message">>,<<"board not exist">>}]};
     _->
-      Sql = "SELECT * FROM " ++ Board1 ++ " WHERE idx = ? and remove='false'",
-      Result = utils:query_execute(db,board_view,Sql,[Post_idx]),
+      Sql = "SELECT * FROM board WHERE board_name = ? and idx = ? and remove='false'",
+      Result = utils:query_execute(db,board_view,Sql,[Board1,Post_idx]),
       case Result#result_packet.rows of
         []->
           {error_post_not_exist,[{<<"message">>,<<"post is not exist">>}]};
         _->
           %% 업데이트 보드 view_count
-          Sql1 = "UPDATE "++Board1 ++ " SET view_count=view_count+1 WHERE idx= ?",
-          utils:query_execute(db,board_view_count,Sql1,[Post_idx]),
+          Sql1 = "UPDATE board SET view_count=view_count+1 WHERE board_name=? and idx= ?",
+          utils:query_execute(db,board_view_count,Sql1,[Board1,Post_idx]),
           {ok,[{<<"post">>,utils:result_as_json(Result)}]}
       end
   end
@@ -181,8 +182,8 @@ query(QueryType,[Board,Title,Contents,User_idx]) when QueryType =:= board_write-
       User_data = utils:redis2json(Redis_result),
       User_id = proplists:get_value(<<"id">>,User_data),
       User_nick = proplists:get_value(<<"nickname">>,User_data),
-      Sql = "INSERT INTO "++Board1 ++ " (title,contents,datetime,last_fixed_datetime,user_idx,user_nick,user_id) Values (?,?,now(),now(),?,?,?)",
-      Result = utils:query_execute(db,board_write,Sql,[Title,Contents,User_idx,User_nick,User_id]),
+      Sql = "INSERT INTO board (board_name,title,contents,datetime,last_fixed_datetime,user_idx,user_nick,user_id) Values (?,?,?,now(),now(),?,?,?)",
+      Result = utils:query_execute(db,board_write,Sql,[Board1,Title,Contents,User_idx,User_nick,User_id]),
       Result_num_row = Result#ok_packet.affected_rows,
       {ok,[{<<"row">>,Result_num_row}]}
   end
@@ -194,8 +195,8 @@ query(QueryType,[Board,Post_idx,Title,Contents,User_idx]) when QueryType =:= boa
     error->
       {error_board_not_exist,[{<<"message">>,<<"board not exist">>}]};
     _->
-      Sql = "UPDATE " ++ Board1 ++ " SET title=?, contents=?,last_fixed_datetime=now() WHERE idx=? and user_idx = ? and remove='false'",
-      Result = utils:query_execute(db,board_fixed,Sql,[Title,Contents,Post_idx,User_idx]),
+      Sql = "UPDATE board SET title=?, contents=?,last_fixed_datetime=now() WHERE board_name=? idx=? and user_idx = ? and remove='false'",
+      Result = utils:query_execute(db,board_fixed,Sql,[Board1,Title,Contents,Post_idx,User_idx]),
       Result_num_row = Result#ok_packet.affected_rows,
       {ok,[{<<"row">>,Result_num_row}]}
   end
@@ -206,8 +207,8 @@ query(QueryType,[Board,Post_idx,User_idx]) when QueryType =:= board_remove->
     error->
       {error_board_not_exist,[{<<"message">>,<<"board not exist">>}]};
     _->
-      Sql = "UPDATE " ++ Board1 ++ " SET remove='true' WHERE idx=? and user_idx = ?",
-      Result = utils:query_execute(db,board_remove,Sql,[Post_idx,User_idx]),
+      Sql = "UPDATE board SET remove='true' WHERE board_name=? and idx=? and user_idx = ?",
+      Result = utils:query_execute(db,board_remove,Sql,[Board1,Post_idx,User_idx]),
       Result_num_row = Result#ok_packet.affected_rows,
       {ok,[{<<"row">>,Result_num_row}]}
   end
@@ -221,7 +222,7 @@ query(QueryType,[User_idx, User_nick,Profile_image_address]) when QueryType =:= 
       {error_user_not_exist,[{<<"message">>,<<"error_user_not_exist or not chagned nickname any user">>}]};
     _->
       % redis server에서도 바꿔야함.
-      redis_query_server:update_user_data(User_idx,User_nick,Profile_image_address),
+      redis_query_server:update_user_data({User_idx,User_nick,Profile_image_address}),
       {ok,[{<<"row">>,Result_num_row}]}
   end
 ;
@@ -233,8 +234,8 @@ query(QueryType,_)->
 
 get_board(Board)->
   case Board of
-    <<"board">>->
-      "board";
+    <<"tempBoard">>->
+      <<"tempBoard">>;
     _->
       error
   end

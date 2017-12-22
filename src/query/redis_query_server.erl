@@ -39,7 +39,7 @@ get_user(User_idx)->gen_server:call(?MODULE,{get_user,User_idx}).
 delete(User_idx)->gen_server:call(?MODULE,{delete,User_idx}).
 insert(Mysql_result)->gen_server:call(?MODULE,{insert,Mysql_result}).
 login(Mysql_result)->gen_server:call(?MODULE,{login,Mysql_result}).
-update_user_data({User_idx,Email,Nickname})->gen_server:call(?MODULE,{update_user_data,{User_idx,Email,Nickname}}).
+update_user_data({User_idx,Nickname,Profile_image_address})->gen_server:call(?MODULE,{update_user_data,{User_idx,Nickname,Profile_image_address}}).
 
 
 %% 유저조회
