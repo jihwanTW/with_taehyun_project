@@ -53,11 +53,14 @@ start(_StartType, _StartArgs) ->
       {database,"with_taehyun_project"},
       {encoding,utf8}
     ]),
-  % ets 설정
-  eredis:start_link(),
+  % redis query server 시작
   redis_query_server:start_link(),
+  % session server 시작
   session_server:start_link(redis_session,session),
+  % redis_session server 시작
   redis_session:start_link(),
+  % connect to emqttd server
+  mqtt_connect_server:start_link(),
 
   % cowboy router 설정
   Dispatch = cowboy_router:compile([

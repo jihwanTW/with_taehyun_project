@@ -42,7 +42,7 @@ query(QueryType,[User_id]) when QueryType =:= get_salt->
     []->
       {error_user_not_exist,[{<<"message">>,<<"user not found">>}]};
     _->
-      Result_json = utils:result_as_json(Result),
+      [Result_json] = utils:result_as_json(Result),
       {ok,Result_json}
   end
 ;
@@ -55,7 +55,9 @@ query(QueryType, [User_id,Pwd]) when QueryType =:= user_login->
 
   case Result#result_packet.rows of
     []->
-      {error_failed_login,[{<<"message">>,<<"failed to login">>}]};
+      {error_failed_login,[{<<"message">>,<<"failed to login">>}]};.
+
+
     _->
       [Result1] = utils:result_as_json(Result),
       Sql1 = "UPDATE user SET last_login_datetime=now()  WHERE idx = ?",
@@ -185,6 +187,8 @@ query(QueryType,[Board,Title,Contents,User_idx]) when QueryType =:= board_write-
       Sql = "INSERT INTO board (board_name,title,contents,datetime,last_fixed_datetime,user_idx,user_nick,user_id) Values (?,?,?,now(),now(),?,?,?)",
       Result = utils:query_execute(db,board_write,Sql,[Board1,Title,Contents,User_idx,User_nick,User_id]),
       Result_num_row = Result#ok_packet.affected_rows,
+      io:format("nick : ~p~n",[User_nick]),
+      mqtt_connect_server:publish_to_mqtt([Board1,jsx:encode([{<<"title">>,Title},{<<"user_nick">>,User_nick}])]),
       {ok,[{<<"row">>,Result_num_row}]}
   end
 ;
