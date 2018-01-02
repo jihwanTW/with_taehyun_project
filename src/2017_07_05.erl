@@ -74,19 +74,18 @@ handle('2017_07_05',<<"user">>,<<"fixed_data">>,{User_idx,Data})->
 
 
 %% 게시판 리스트/검색
-handle('2017_07_05',<<"board">>,<<"list">>,Data)->
-  Board = proplists:get_value(<<"board">>,Data),
-  Page = proplists:get_value(<<"page">>,Data,1),
-  Limit = proplists:get_value(<<"limit">>,Data,10),
-  Search_type = proplists:get_value(<<"search_type">>,Data,0),
-  Search_keyword = proplists:get_value(<<"search_keyword">>,Data,""),
-  mysql_query:query(board_list,[Board,Page,Limit,Search_type,Search_keyword])
+handle('2017_07_05',<<"board">>,<<"list">>,_Data)->
+%%  Board = proplists:get_value(<<"board">>,Data),
+%%  Page = proplists:get_value(<<"page">>,Data,1),
+%%  Limit = proplists:get_value(<<"limit">>,Data,10),
+%%  Search_type = proplists:get_value(<<"search_type">>,Data,0),
+%%  Search_keyword = proplists:get_value(<<"search_keyword">>,Data,""),
+  mysql_query:query(board_list,[])
   ;
 %% 게시글 조회
 handle('2017_07_05',<<"board">>,<<"view">>,Data)->
-  Board = proplists:get_value(<<"board">>,Data),
   Post_idx = proplists:get_value(<<"post_idx">>,Data),
-  mysql_query:query(board_view,[Board, Post_idx])
+  mysql_query:query(board_view,[ Post_idx])
   ;
 %% 게시글 쓰기
 handle('2017_07_05',<<"board">>,<<"write">>,{User_idx,Data})->
@@ -97,9 +96,9 @@ handle('2017_07_05',<<"board">>,<<"write">>,{User_idx,Data})->
 ;
 %% 게시글 수정
 handle('2017_07_05',<<"board">>,<<"fixed">>,{User_idx,Data})->
-  Board = proplists:get_value(<<"board">>,Data),
   Post_idx = proplists:get_value(<<"post_idx">>,Data),
   Title = proplists:get_value(<<"title">>,Data),
+  Board = proplists:get_value(<<"board">>,Data),
 
 
 
@@ -111,9 +110,8 @@ handle('2017_07_05',<<"board">>,<<"fixed">>,{User_idx,Data})->
 
 %% 게시글 삭제
 handle('2017_07_05',<<"board">>,<<"remove">>,{User_idx,Data})->
-  Board = proplists:get_value(<<"board">>,Data),
   Post_idx = proplists:get_value(<<"post_idx">>,Data),
-  mysql_query:query(board_remove,[Board,Post_idx,User_idx])
+  mysql_query:query(board_remove,[Post_idx,User_idx])
   ;
 handle('2017_07_05',<<"php_jquery">>,<<"test">>,Data)->
   Id = proplists:get_value(<<"unique_id">>,Data),

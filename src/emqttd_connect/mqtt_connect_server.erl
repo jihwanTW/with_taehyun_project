@@ -32,7 +32,7 @@ start_link() ->
   gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-  {ok,Pid} = connect_mqtt([{host, "localhost"}, {client_id, <<"server">>},{username,<<"server_admin_jihwan">>},{password,<<"pw1234">>},{logger, {error_logger, warning}}]),
+  {ok,Pid} = connect_mqtt([{host, "localhost"}, {client_id, <<"server">>},{username,<<"server_admin_jihwan">>},{password,<<"pw1234">>},{logger, {error_logger, warning}},{reconnect, 4}]),
   {ok, #state{mqttc = Pid, seq = 1}}.
 
 handle_call({publish,[Topic,Payload]}, _From,  State = #state{mqttc = Pid}) ->
@@ -55,8 +55,8 @@ handle_info({publish, Topic, Payload}, State) ->
 %% Client connected
 handle_info({mqttc, Pid, connected}, State = #state{mqttc = Pid}) ->
   io:format("Client ~p is connected~n", [Pid]),
-  ?MQTTC:subscribe(Pid, <<"TopicA">>, 1),
-  ?MQTTC:subscribe(Pid, <<"TopicB">>, 2),
+  %?MQTTC:subscribe(Pid, <<"TopicA">>, 1),
+  %?MQTTC:subscribe(Pid, <<"TopicB">>, 2),
   self() ! publish,
   {noreply, State};
 

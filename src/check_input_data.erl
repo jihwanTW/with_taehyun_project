@@ -52,22 +52,22 @@ check_input({'2017_07_05',<<"user">>,<<"check_exist">>},Data)->
 ;
 %% 유저 정보 조회
 check_input({'2017_07_05',<<"user">>,<<"fixed_data">>},Data)->
-  check_inputDataAndSession([<<"user_nick">>,<<"profile_image_address">>],Data);
+  check_inputDataAndSession([<<"board">>,<<"user_nick">>,<<"profile_image_address">>],Data);
 
 check_input({'2017_07_05',<<"board">>,<<"list">>},Data)->
-  check_inputData([<<"board">>],Data)
+  check_inputData([],Data)
 ;
 check_input({'2017_07_05',<<"board">>,<<"view">>},Data)->
-  check_inputData([<<"board">>,<<"post_idx">>],Data)
+  check_inputData([<<"post_idx">>],Data)
 ;
 check_input({'2017_07_05',<<"board">>,<<"write">>},Data)->
   check_inputDataAndSession([<<"board">>,<<"title">>,<<"contents">>],Data)
 ;
 check_input({'2017_07_05',<<"board">>,<<"fixed">>},Data)->
-  check_inputDataAndSession([<<"board">>,<<"post_idx">>,<<"title">>,<<"contents">>],Data)
+  check_inputDataAndSession([<<"post_idx">>,<<"title">>,<<"contents">>],Data)
 ;
 check_input({'2017_07_05',<<"board">>,<<"remove">>},Data)->
-  check_inputDataAndSession([<<"board">>,<<"post_idx">>],Data)
+  check_inputDataAndSession([<<"post_idx">>],Data)
 ;
 
 
