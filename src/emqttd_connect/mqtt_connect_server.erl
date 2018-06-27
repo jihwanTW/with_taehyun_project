@@ -32,7 +32,14 @@ start_link() ->
   gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-  {ok,Pid} = connect_mqtt([{host, "localhost"}, {client_id, <<"server">>},{username,<<"server_admin_jihwan">>},{password,<<"pw1234">>},{logger, {error_logger, warning}},{reconnect, 4}]),
+  {ok,Pid} = connect_mqtt([
+    {host, "localhost"},
+    {client_id, <<"server">>},
+    {username,<<"server_admin_jihwan">>},
+    {password,<<"pw1234">>},
+    {logger, {error_logger, warning}},
+    {reconnect, 4}
+  ]),
   {ok, #state{mqttc = Pid, seq = 1}}.
 
 handle_call({publish,[Topic,Payload]}, _From,  State = #state{mqttc = Pid}) ->

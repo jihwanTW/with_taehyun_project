@@ -172,7 +172,7 @@ query(QueryType,[Board,Post_idx,Title,Contents,User_idx]) when QueryType =:= boa
   {ok,[{<<"row">>,Result_num_row1}]}
 ;
 query(QueryType,[Post_idx,User_idx]) when QueryType =:= board_remove->
-  Sql = "UPDATE board SET remove='true' WHERE and idx=? and user_idx = ?",
+  Sql = "UPDATE board SET remove='true' WHERE idx=? and user_idx = ?",
   Result = utils:query_execute(db,board_remove,Sql,[Post_idx,User_idx]),
   Result_num_row = Result#ok_packet.affected_rows,
   case Result_num_row of
