@@ -29,7 +29,7 @@ handle(Req, State) ->
            _ ->
              BodyRaw
          end,
-  io:format("body Result : ~p",[Body]),
+  io:format("input body values : ~p\n",[Body]),
   DecodeData = jsx:decode(Body),
   Version_atom = binary_to_atom(Version, utf8),
   % 인풋데이터 존재여부와 세션키를 필요로하면 세션값체크
@@ -51,6 +51,12 @@ handle(Req, State) ->
                        end;
                      _ -> CheckResult
                    end,
+  case Name of
+    <<"list">>->
+    ok;
+    _->
+      io:format("Function Result : ~p",[FunctionResult])
+  end,
   % http 상태코드 붙임
   {HttpStateCode, Reply} = append_http_code(append_result_json(FunctionResult)),
 
